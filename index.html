@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Advanced Attendance Calculator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1d2671, #c33764);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+    }
+    .card {
+      background: #fff;
+      padding: 26px 30px;
+      border-radius: 16px;
+      width: 360px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+      position: relative;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+    label {
+      font-size: 14px;
+      margin-top: 10px;
+      display: block;
+    }
+    input {
+      width: 100%;
+      padding: 9px 12px;
+      margin-top: 6px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      width: 100%;
+      margin-top: 14px;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background: #1d2671;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    button:hover { background: #151a52; }
+
+    .progress {
+      height: 10px;
+      background: #eee;
+      border-radius: 10px;
+      margin-top: 14px;
+      overflow: hidden;
+    }
+    .bar {
+      height: 100%;
+      width: 0;
+      transition: 0.4s;
+    }
+
+    .result {
+      margin-top: 14px;
+      font-size: 14px;
+      text-align: center;
+    }
+    .ok { color: green; }
+    .warn { color: red; }
+
+    .toggle {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .dark {
+      background: #121212;
+      color: #fff;
+    }
+    .dark .card { background: #1f1f1f; }
+    .dark input { background: #333; color: #fff; border: 1px solid #555; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="toggle" onclick="toggleMode()">🌙 Dark</div>
+    <h2>Attendance Calculator</h2>
+
+    <label>Total Classes</label>
+    <input type="number" id="total" />
+
+    <label>Attended Classes</label>
+    <input type="number" id="attended" />
+
+    <label>Required Attendance (%)</label>
+    <input type="number" id="criteria" value="75" />
+
+    <button onclick="calculate()">Calculate</button>
+    <button onclick="saveData()">Save</button>
+    <button onclick="clearData()">Clear</button>
+
+    <div class="progress"><div class="bar" id="bar"></div></div>
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    const body = document.body;
+    const bar = document.getElementById('bar');
+
+    function calculate() {
+      const total = +totalInput.value;
+      const attended = +attendedInput.value;
+      const criteria = +criteriaInput.value;
+
+      if (total <= 0 || attended < 0 || attended > total) {
+        result.innerHTML = '<span class="warn">Invalid input</span>';
+        return;
+      }
+
+      const percent = ((attended / total) * 100).toFixed(2);
+      bar.style.width = percent + '%';
+      bar.style.background = percent >= criteria ? 'green' : 'red';
+
+      let msg = `Attendance: <b>${percent}%</b><br>`;
+
+      if (percent >= criteria) {
+        const bunk = Math.floor((attended * 100 / criteria) - total);
+        msg += `<span class="ok">Safe ✅<br>You can bunk ${bunk} classes</span>`;
+      } else {
+        const needed = Math.ceil(((criteria / 100) * total) - attended);
+        msg += `<span class="warn">Need ${needed} more continuous classes</span>`;
+      }
+
+      result.innerHTML = msg;
+    }
+
+    function saveData() {
+      localStorage.setItem('attendance', JSON.stringify({
+        total: totalInput.value,
+        attended: attendedInput.value,
+        criteria: criteriaInput.value
+      }));
+      alert('Saved successfully');
+    }
+
+    function clearData() {
+      localStorage.clear();
+      location.reload();
+    }
+
+    function toggleMode() {
+      body.classList.toggle('dark');
+    }
+
+    const totalInput = document.getElementById('total');
+    const attendedInput = document.getElementById('attended');
+    const criteriaInput = document.getElementById('criteria');
+    const result = document.getElementById('result');
+
+    window.onload = () => {
+      const data = JSON.parse(localStorage.getItem('attendance'));
+      if (data) {
+        totalInput.value = data.total;
+        attendedInput.value = data.attended;
+        criteriaInput.value = data.criteria;
+        calculate();
+      }
+    };
+  </script>
+</body>
+</html>
